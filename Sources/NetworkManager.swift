@@ -15,19 +15,12 @@ class NetworkManager: BaseNetworkManager {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36",
         "Content-Type": "application/json; charset=utf-8"
     ]
-        
+    
     override init () {
         // TODO
     }
     
     static let sharedInstance = NetworkManager()
-    
-    func establishConnection(completion: @escaping (_ data: [CookieModel]?, _ response: URLResponse?, _ error: Error?) -> Void) {
-        let url = baseURL+"flight"
-        get(url: url, headers: headers, parameters: nil)  { (data, response, error) in
-            completion(nil, response, error)
-        }
-    }
     
     func get(endpoint: String, parameters: [String: String]?, body: [String: String]?, completion: @escaping (_ data: HtmlModel?, _ response: URLResponse?, _ error: Error?) -> Void) {
         let url = baseURL+endpoint
