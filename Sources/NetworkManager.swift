@@ -15,32 +15,22 @@ class NetworkManager: BaseNetworkManager {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36",
         "Content-Type": "application/json; charset=utf-8"
     ]
-    
-    var cookies: String?
-    
+        
     override init () {
         // TODO
     }
     
     static let sharedInstance = NetworkManager()
     
-    func establishConnection() {
-        establishConnection(url: baseURL + "flight", headers: headers, parameters: nil) { (data, response, error) in
-            guard let cookies = data else {
-                // TODO handle error
-                return
-            }
-            self.cookies = cookies.flatMap{String(describing: $0)}.joined(separator: " ")
+    func establishConnection(completion: @escaping (_ data: [CookieModel]?, _ response: URLResponse?, _ error: Error?) -> Void) {
+        let url = baseURL+"flight"
+        get(url: url, headers: headers, parameters: nil)  { (data, response, error) in
+            completion(nil, response, error)
         }
     }
     
-    func get(endpoint: String, parameters: [String: AnyObject]?, body: [String: String]?, completion: @escaping (_ data: HtmlModel?, _ response: URLResponse?, _ error: Error?) -> Void) {
+    func get(endpoint: String, parameters: [String: String]?, body: [String: String]?, completion: @escaping (_ data: HtmlModel?, _ response: URLResponse?, _ error: Error?) -> Void) {
         let url = baseURL+endpoint
-        getHtml(url: url, headers: headers, parameters: parameters, completion: completion)
-    }
-    
-    func getFlightSelectFlight(headers: [String: String]?, parameters: [String: AnyObject]?, completion: @escaping (_ data: HtmlModel?, _ response: URLResponse?, _ error: Error?) -> Void) {
-      let url = baseURL+"flight/select-flight.html"
-      getHtml(url: url, headers: headers, parameters: parameters, completion: completion)
+        get(url: url, headers: headers, parameters: parameters as [String: AnyObject]?, completion: completion)
     }
 }
