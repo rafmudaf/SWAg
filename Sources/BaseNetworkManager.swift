@@ -18,52 +18,51 @@ class BaseNetworkManager {
     
     public func get<T: BaseModel>(url: String, headers: [String: String]?, parameters: [String: AnyObject]?, completion: @escaping (_ data: T?, _ response: URLResponse?, _ error: Error?) -> Void) {
         
-        print(url)
+        print("GET request at:", url)
         
         var stayAlive = true
-                        
+        
+        let queue = DispatchQueue(label: "swa_tools", qos: .userInitiated, attributes: .concurrent)
         Alamofire.request(url, method: .get, parameters: parameters)
-            .validate { request, response, data in
-                // Custom evaluation closure now includes data (allows you to parse data to dig out error messages if necessary)
-                return .success
-            }
-            .response { response in
+            .validate()
+            .responseString(queue: queue) { response in
+                print(response.response?.statusCode)
+                // parse the headers and store the cookies
                 guard let header = response.response?.allHeaderFields as? [String: String], let url = response.request?.url else {
                     completion(nil, response.response, response.error)
                     return
                 }
                 let cookies = HTTPCookie.cookies(withResponseHeaderFields: header, for: url)
                 self.set(cookies: cookies, for: url)
-            }
-            .responseString { response in
-                guard response.error == nil else {
+                
+                // parse the content
+                guard let responseUrl = response.response?.url else {
                     completion(nil, response.response, response.error)
                     return
                 }
                 
-                guard let htmlAsString = response.result.value else {
+                guard let responseValue = response.result.value else {
                     completion(nil, response.response, response.error)
                     return
                 }
                 
-//                print(htmlAsString)
-                let doc = HTMLDocument(string: htmlAsString)
-                let e = doc.bodyElement?.treeEnumerator()
-//                for ee in e! {
-//                    print(ee)
-//                }
-//                print(doc.bodyElement?.treeEnumerator())
-//                print(doc.children)
-//                print(doc.nodes(matchingSelector: "tr"))
+                let doc = HTMLDocument(string: responseValue)
                 
                 let t = T()
-                t.loadDataFrom(dictionary: ["htmdoc": e])
+                t.loadDataFrom(dictionary: [
+                        "url": responseUrl.absoluteString,
+                        "contentString": responseValue,
+                        "htmlDocument": doc
+                    ]
+                )
                 completion(t, response.response, response.error)
+                
                 stayAlive = false
             }
         
         let runLoop = RunLoop.current
-        while stayAlive && runLoop.run(mode: RunLoopMode.defaultRunLoopMode, before: Date(timeIntervalSinceNow: 0.1)) {
+        let loopEstablished = runLoop.run(mode: .defaultRunLoopMode, before: Date(timeIntervalSinceNow: 0.1))
+        while stayAlive && loopEstablished {
                 // Run, run, run
         }
     }
