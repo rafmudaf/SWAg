@@ -18,14 +18,17 @@ func searchForFlight() {
         "lowfareSearch": "undefined"
     ]
     NetworkManager.sharedInstance.get(endpoint: "flight/select-flight.html", parameters: parameters, body: body) { (data, response, error) in
-//        guard let html = data else {
-//            return
+        guard let html = data else {
+            return
+        }
+        
+//        if let doc = html.getHtmlDoc() {
+//            print(doc.bodyElement?.children as Any)
 //        }
+        
+        
+//        print(html.getContentString())
     }
 }
 
-// establish the persistent connect; i.e. cookies
-NetworkManager.sharedInstance.get(endpoint: "flight", parameters: nil, body: nil) { (data, response, error) in
-    searchForFlight()
-}
-
+searchForFlight()
